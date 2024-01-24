@@ -1,5 +1,12 @@
 # Learn-to-earn Challenge 1
 
+## How to build and test
+
+```sh
+npm install
+npm run test
+```
+
 ## Challenge Question
 
 The first challenge is based around depositing secret messages from authorised users. The requirements of the challenge are to write a contract as specified below, plus tests to show the code is working.
