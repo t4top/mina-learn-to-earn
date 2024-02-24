@@ -4,6 +4,7 @@ My solutions to the monthly Mina Navigators Learn-to-earn challenge questions.
 
 ## Solutions
 
+- [Challenge 2](./challenge_2/)
 - [Challenge 1](./challenge_1/)
 
 ## How to test
@@ -29,7 +30,7 @@ npm run test
 
 ## What is Mina Learn-to-earn?
 
-See the [program Notion site](https://minafoundation.notion.site/ARCHIVE-Learn-to-earn-curriculum-20e17b89f5964973b7bd1b03ba424ba6) for more details.
+See the [program Notion site](https://minafoundation.notion.site/63c6142a592f4130a83fbfc5e1256201) for more details.
 
 ## License
 
