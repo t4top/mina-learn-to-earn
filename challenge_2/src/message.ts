@@ -14,7 +14,7 @@ class PublicMessage extends Struct({ number: Field, isValid: Bool }) {
 }
 
 /** Number of messages sent in a batch at a time */
-const BATCH_SIZE = 200;
+const BATCH_SIZE = 10;
 
 /** Helper class for batching multiple Message objects together as a Provable Array */
 class BatchMessages extends Struct({ value: Provable.Array(Message, BATCH_SIZE) }) {

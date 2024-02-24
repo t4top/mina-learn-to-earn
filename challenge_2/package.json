@@ -10,7 +10,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "test": "tsc && node --test build"
+    "test": "tsc && NODE_OPTIONS='--max-old-space-size=4096' node --test build"
   },
   "peerDependencies": {
     "o1js": "0.15.*"
