@@ -2,8 +2,11 @@ import assert from "node:assert";
 import { describe, it } from "node:test";
 import { AccountUpdate, Cache, Field, Mina, PrivateKey, Reducer, UInt32 } from "o1js";
 import { MessageProcessor } from "./message_processor.js";
-import { Message, BatchMessages, BATCH_SIZE } from "./message.js";
+import { Message, BatchMessages, PROVABLE_ARRAY_LENGTH } from "./message.js";
 import { Agent } from "./agent.js";
+
+/** Number of messages sent as a batch */
+const BATCH_SIZE = 200;
 
 let zkApp: MessageProcessor;
 let local: ReturnType<typeof Mina.LocalBlockchain>;
@@ -60,7 +63,7 @@ describe("Challenge 2: Message Processor", async () => {
       const msgNum = 1;
       const message = createMessage(msgNum, createAgent(0));
 
-      await sendBatchMessages([message]);
+      await sendMessages([message]);
       await rollup();
 
       const highestMessageNumber = zkApp.highestMessageNumber.get();
@@ -71,7 +74,7 @@ describe("Challenge 2: Message Processor", async () => {
       const msgNum = 2;
       const message = createMessage(msgNum, createAgent(1));
 
-      await sendBatchMessages([message]);
+      await sendMessages([message]);
       await rollup();
 
       const highestMessageNumber = zkApp.highestMessageNumber.get();
@@ -82,7 +85,7 @@ describe("Challenge 2: Message Processor", async () => {
       const msgNum = 1;
       const message = createMessage(msgNum, createAgent(2));
 
-      await sendBatchMessages([message]);
+      await sendMessages([message]);
       await rollup();
 
       // previous highest number (i.e. 2) remains unchanged
@@ -96,7 +99,7 @@ describe("Challenge 2: Message Processor", async () => {
         messages.push(createMessage(i, createAgent(3)));
       }
 
-      await sendBatchMessages(messages);
+      await sendMessages(messages);
       await rollup();
 
       const highestMessageNumber = zkApp.highestMessageNumber.get();
@@ -111,7 +114,7 @@ describe("Challenge 2: Message Processor", async () => {
       const invalidAgentId2 = createAgent(5000);
       const message2 = createMessage(msgNum, invalidAgentId2);
 
-      await sendBatchMessages([message1, message2]);
+      await sendMessages([message1, message2]);
       await rollup();
 
       // previous highest number remains unchanged
@@ -127,7 +130,7 @@ describe("Challenge 2: Message Processor", async () => {
       const invalidAgentXLocation2 = createAgent(5, 15000);
       const message2 = createMessage(msgNum, invalidAgentXLocation2);
 
-      await sendBatchMessages([message1, message2]);
+      await sendMessages([message1, message2]);
       await rollup();
 
       // previous highest number remains unchanged
@@ -143,7 +146,7 @@ describe("Challenge 2: Message Processor", async () => {
       const invalidAgentYLocation2 = createAgent(7, 10000, 20000);
       const message2 = createMessage(msgNum, invalidAgentYLocation2);
 
-      await sendBatchMessages([message1, message2]);
+      await sendMessages([message1, message2]);
       await rollup();
 
       // previous highest number remains unchanged
@@ -159,7 +162,7 @@ describe("Challenge 2: Message Processor", async () => {
       const invalidCheckSum2 = createAgent(7, 10000, 19000, 10);
       const message2 = createMessage(msgNum, invalidCheckSum2);
 
-      await sendBatchMessages([message1, message2]);
+      await sendMessages([message1, message2]);
       await rollup();
 
       // previous highest number remains unchanged
@@ -167,7 +170,7 @@ describe("Challenge 2: Message Processor", async () => {
       assert.deepStrictEqual(highestMessageNumber, Field(BATCH_SIZE));
     });
 
-    it("should drop messages with YLocation NOT greater than XLocation", async () => {
+    it("should drop messages with YLocation not greater than XLocation", async () => {
       const msgNum = BATCH_SIZE + 10;
       const yLocationEqual = createAgent(8, 7000, 7000);
       const message1 = createMessage(msgNum, yLocationEqual);
@@ -175,7 +178,7 @@ describe("Challenge 2: Message Processor", async () => {
       const yLocationLess = createAgent(9, 10000, 9000);
       const message2 = createMessage(msgNum, yLocationLess);
 
-      await sendBatchMessages([message1, message2]);
+      await sendMessages([message1, message2]);
       await rollup();
 
       // previous highest number remains unchanged
@@ -192,7 +195,7 @@ describe("Challenge 2: Message Processor", async () => {
       const message4 = createMessage(250);
       const message5 = createMessage(1);
 
-      await sendBatchMessages([message1, message2, message3, message4, message5]);
+      await sendMessages([message1, message2, message3, message4, message5]);
       await rollup();
 
       const highestMessageNumber = zkApp.highestMessageNumber.get();
@@ -221,14 +224,24 @@ function createMessage(num: number = 0, agent?: Agent) {
   });
 }
 
-async function sendBatchMessages(messages: Message[]) {
-  // ensure batch size is correct
-  const batchMsgs = messages.concat(new Array(BATCH_SIZE).fill(createMessage())).slice(0, BATCH_SIZE);
+async function sendMessages(messages: Message[]) {
+  const chunkSize = PROVABLE_ARRAY_LENGTH;
+  const chunkCount = Math.ceil(messages.length / chunkSize);
 
-  // send the messages as a batch
+  for (let i = 0; i < chunkCount; i++) {
+    const batchMsgs = Array.from({ length: chunkSize }, (_, j) => {
+      const pos = i * chunkSize + j;
+      return pos < messages.length ? messages[pos] : createMessage();
+    });
+    await sendBatchMessages(batchMsgs);
+  }
+}
+
+/** send messages in a batch */
+async function sendBatchMessages(messages: Message[]) {
   const sender = local.testAccounts[0];
   const tx = await Mina.transaction(sender.publicKey, () => {
-    zkApp.receiveMessages(BatchMessages.from(batchMsgs));
+    zkApp.receiveMessages(BatchMessages.from(messages));
   });
   await tx.prove();
   await tx.sign([sender.privateKey]).send();

@@ -1,4 +1,4 @@
-export { Message, PublicMessage, BatchMessages, BATCH_SIZE };
+export { Message, PublicMessage, BatchMessages, PROVABLE_ARRAY_LENGTH };
 
 import { Bool, Field, Poseidon, Provable, Struct } from "o1js";
 import { Agent } from "./agent.js";
@@ -13,11 +13,11 @@ class PublicMessage extends Struct({ number: Field, isValid: Bool }) {
   }
 }
 
-/** Number of messages sent in a batch at a time */
-const BATCH_SIZE = 10;
+/** Number of messages in a provable array */
+const PROVABLE_ARRAY_LENGTH = 10;
 
 /** Helper class for batching multiple Message objects together as a Provable Array */
-class BatchMessages extends Struct({ value: Provable.Array(Message, BATCH_SIZE) }) {
+class BatchMessages extends Struct({ value: Provable.Array(Message, PROVABLE_ARRAY_LENGTH) }) {
   static from(messages: Message[]) {
     return new BatchMessages({ value: messages });
   }
