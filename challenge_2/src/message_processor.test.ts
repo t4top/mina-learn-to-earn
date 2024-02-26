@@ -81,6 +81,18 @@ describe("Challenge 2: Message Processor", async () => {
       assert.deepStrictEqual(highestMessageNumber, Field(msgNum));
     });
 
+    it("should process message as duplicate if the message number is equal as the previous one", async () => {
+      const msgNum = 2;
+      const message = createMessage(msgNum, createAgent(2));
+
+      await sendMessages([message]);
+      await rollup();
+
+      // previous highest number (i.e. 2) remains unchanged
+      const highestMessageNumber = zkApp.highestMessageNumber.get();
+      assert.deepStrictEqual(highestMessageNumber, Field(2));
+    });
+
     it("should process message as duplicate if the message number is not greater than the previous one", async () => {
       const msgNum = 1;
       const message = createMessage(msgNum, createAgent(2));
