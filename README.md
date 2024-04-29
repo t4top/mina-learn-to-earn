@@ -4,6 +4,7 @@ My solutions to the monthly Mina Navigators Learn-to-earn challenge questions.
 
 ## Solutions
 
+- [Challenge 3](./challenge_3/)
 - [Challenge 2](./challenge_2/)
 - [Challenge 1](./challenge_1/)
 
