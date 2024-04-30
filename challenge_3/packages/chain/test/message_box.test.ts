@@ -60,7 +60,7 @@ describe("Challenge 3: MessageBox", () => {
     expect(contractAgentState3?.securityCode.getValue().toString()).toBe("EF");
   }, 1_000_000);
 
-  it("should receive valid message for a valid agent", async () => {
+  it("should accept valid message for a valid agent", async () => {
     const message = createMessage(10, generateRandomString(12), agentId1, "AB");
     const block = await sendTransaction(() => messageBox.receiveMessage(message));
 
@@ -69,6 +69,54 @@ describe("Challenge 3: MessageBox", () => {
     const contractAgentState1 = await appChain.query.runtime.MessageBox.contractState.get(agentId1);
     expect(contractAgentState1?.lastMessageNumber).toStrictEqual(Field(10));
   }, 1_000_000);
+
+  it("should fail if agent ID does not exist", async () => {
+    const message = createMessage(11, generateRandomString(12), new AgentId("4"), "AB");
+    const block = await sendTransaction(() => messageBox.receiveMessage(message));
+
+    expect(block?.transactions[0].status.toBoolean()).toBe(false);
+    expect(block?.transactions[0].statusMessage).toBe("AgentID does not exist in the system");
+  });
+
+  it("should fail if security code does not match", async () => {
+    const message = createMessage(12, generateRandomString(12), agentId2, "AB");
+    const block = await sendTransaction(() => messageBox.receiveMessage(message));
+
+    expect(block?.transactions[0].status.toBoolean()).toBe(false);
+    expect(block?.transactions[0].statusMessage).toBe("Security code does not match");
+  });
+
+  it("should fail if message length is not 12", async () => {
+    const message = createMessage(13, generateRandomString(15), agentId2, "CD");
+    const block = await sendTransaction(() => messageBox.receiveMessage(message));
+
+    expect(block?.transactions[0].status.toBoolean()).toBe(false);
+    expect(block?.transactions[0].statusMessage).toBe("Message length is wrong");
+  });
+
+  it("should fail if security code length is not 2", async () => {
+    const message = createMessage(14, generateRandomString(12), agentId3, "EFG");
+    const block = await sendTransaction(() => messageBox.receiveMessage(message));
+
+    expect(block?.transactions[0].status.toBoolean()).toBe(false);
+    expect(block?.transactions[0].statusMessage).toBe("Security code does not match");
+  });
+
+  it("should fail if message number is equal to the last message number", async () => {
+    const message = createMessage(10, generateRandomString(12), agentId1, "AB");
+    const block = await sendTransaction(() => messageBox.receiveMessage(message));
+
+    expect(block?.transactions[0].status.toBoolean()).toBe(false);
+    expect(block?.transactions[0].statusMessage).toBe("Message number must be greater than the last highest in state");
+  });
+
+  it("should fail if message number is less than last message number", async () => {
+    const message = createMessage(9, generateRandomString(12), agentId1, "AB");
+    const block = await sendTransaction(() => messageBox.receiveMessage(message));
+
+    expect(block?.transactions[0].status.toBoolean()).toBe(false);
+    expect(block?.transactions[0].statusMessage).toBe("Message number must be greater than the last highest in state");
+  });
 });
 
 // ------------------
