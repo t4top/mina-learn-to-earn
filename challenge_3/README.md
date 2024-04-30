@@ -1,10 +1,27 @@
 # Learn-to-earn Challenge 3
 
+## Answer to the spymaster is worried that this design is not private.
+
+### Is he correct?
+
+Yes. The spy master is right to be worried. The current design is not private. All messages are public inputs, and their contents are visible to the sequencer. The agent IDs are also publicly visible in the on-chain state.
+
+### How could you change the system to ensure that messages are private?
+
+To ensure message privacy, the processing of messages should be moved off-chain and processed on the agent's local machine. Only the proof of the computation should be sent to the sequencer. Additionally, agent IDs and security codes must be hashed in the on-chain state to protect sensitive information. We can utilize a ZKProgram to enable agents to make off-chain private inputs from their local devices and then verify the proof on-chain.
+
+## Prerequisites
+
+- Node.js v18
+- pnpm
+- nvm
+
 ## How to build and test
 
 ```sh
-npm install
-npm run test
+nvm use
+pnpm install
+pnpm run test
 ```
 
 ## Challenge Question

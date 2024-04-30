@@ -1,10 +1,17 @@
 # Learn-to-earn Challenge 4
 
+## Prerequisites
+
+- Node.js v18
+- pnpm
+- nvm
+
 ## How to build and test
 
 ```sh
-npm install
-npm run test
+nvm use
+pnpm install
+pnpm run test
 ```
 
 ## Challenge Question
