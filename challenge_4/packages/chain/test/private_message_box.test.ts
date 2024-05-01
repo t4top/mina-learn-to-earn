@@ -18,6 +18,10 @@ const agentId1 = new AgentId("1");
 const agentIdHash1 = createAgentHash(agentId1);
 const agentState1 = createAgentState(0, "AB");
 
+const agentId2 = new AgentId("2");
+const agentIdHash2 = createAgentHash(agentId2);
+const agentState2 = createAgentState(0, "CD");
+
 describe("Challenge 3: PrivateMessageBox", () => {
   beforeAll(async () => {
     appChain = TestingAppChain.fromRuntime({
@@ -49,9 +53,8 @@ describe("Challenge 3: PrivateMessageBox", () => {
     expect(contractAgentState1?.lastMessageNumber).toStrictEqual(Field(0));
   }, 1_000_000);
 
-  it("should receive valid message for a valid agent", async () => {
+  it("should accept valid message for a valid agent", async () => {
     const message = createMessage(10, generateRandomString(12), agentId1, "AB");
-
     const messageProof = await messageValidator.verifyUserInputs(message);
 
     const block = await sendTransaction(() => messageBox.receiveMessageProof(messageProof));
@@ -61,6 +64,20 @@ describe("Challenge 3: PrivateMessageBox", () => {
     const contractAgentState1 = await appChain.query.runtime.PrivateMessageBox.state.get(agentIdHash1);
     expect(contractAgentState1?.lastMessageNumber).toStrictEqual(Field(10));
   }, 1_000_000);
+
+  it("should get the details for a particular block height", async () => {
+    const message = createMessage(11, generateRandomString(12), agentId2, "CD");
+    const messageProof = await messageValidator.verifyUserInputs(message);
+
+    const block = await sendTransaction(() => messageBox.receiveMessageProof(messageProof));
+
+    expect(block?.transactions[0].status.toBoolean()).toBe(true);
+
+    const AgentIDHash = await appChain.query.runtime.PrivateMessageBox.blockState.get(UInt64.from(block!.height));
+    const contractAgentState = await appChain.query.runtime.PrivateMessageBox.state.get(AgentIDHash!);
+
+    expect(contractAgentState?.lastMessageNumber).toStrictEqual(Field(11));
+  }, 1_000_000_000);
 });
 
 // ------------------
